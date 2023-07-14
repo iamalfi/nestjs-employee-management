@@ -1,5 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsNotEmpty, IsString, IsNumber } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  IsNumber,
+  IsPhoneNumber,
+  MaxLength,
+  Length,
+  MinLength,
+  Matches,
+} from 'class-validator';
 
 export class CreateEmployeeDto {
   @IsNotEmpty()

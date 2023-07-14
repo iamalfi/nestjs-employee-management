@@ -3,13 +3,13 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   HttpException,
   HttpStatus,
   Res,
   Put,
+  BadRequestException,
 } from '@nestjs/common';
 import { EmployeeService } from './employee.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
@@ -36,8 +36,33 @@ export class EmployeeController {
   @ApiBadRequestResponse({ description: 'you cannot create.Try again!' })
   @ApiBody({ type: CreateEmployeeDto })
   async create(@Body() createEmployeeDto: CreateEmployeeDto, @Res() response) {
-    const responseForm = await this.employeeService.create(createEmployeeDto);
-    if (!responseForm) {
+    const employee = await this.employeeService.create(createEmployeeDto);
+    const {
+      phoneNumber,
+      secondaryEmergencyContactPhoneNumber,
+      primaryEmergencyContactPhoneNumber,
+    } = createEmployeeDto;
+
+    // Convert phone number to string
+    const phoneNumberString = phoneNumber.toString();
+    const secondaryphoneNumberString =
+      secondaryEmergencyContactPhoneNumber.toString();
+    const primaryphoneNumberString =
+      primaryEmergencyContactPhoneNumber.toString();
+
+    // Validate Indian phone number format
+    const indianPhoneNumberRegex = /^[6-9]\d{9}$/;
+    if (
+      !indianPhoneNumberRegex.test(phoneNumberString) &&
+      !indianPhoneNumberRegex.test(secondaryphoneNumberString) &&
+      !indianPhoneNumberRegex.test(primaryphoneNumberString)
+    ) {
+      throw new BadRequestException(
+        'inavlid phone number it should be an indian and ten digits.',
+      );
+    }
+
+    if (!employee) {
       throw new HttpException(
         'Failed to create employee details. Try again!',
         HttpStatus.BAD_REQUEST,
@@ -46,7 +71,7 @@ export class EmployeeController {
     return response.status(HttpStatus.CREATED).json({
       status: true,
       message: 'employee created successfully',
-      responseForm,
+      employee,
     });
   }
 
@@ -89,6 +114,30 @@ export class EmployeeController {
     @Res() response,
   ) {
     const employee = await this.employeeService.update(id, updateEmployeeDto);
+    const {
+      phoneNumber,
+      secondaryEmergencyContactPhoneNumber,
+      primaryEmergencyContactPhoneNumber,
+    } = updateEmployeeDto;
+
+    // Convert phone number to string
+    const phoneNumberString = phoneNumber.toString();
+    const secondaryphoneNumberString =
+      secondaryEmergencyContactPhoneNumber.toString();
+    const primaryphoneNumberString =
+      primaryEmergencyContactPhoneNumber.toString();
+
+    // Validate Indian phone number format
+    const indianPhoneNumberRegex = /^[6-9]\d{9}$/;
+    if (
+      !indianPhoneNumberRegex.test(phoneNumberString) ||
+      !indianPhoneNumberRegex.test(secondaryphoneNumberString) ||
+      !indianPhoneNumberRegex.test(primaryphoneNumberString)
+    ) {
+      throw new BadRequestException(
+        'inavlid phone number it should be an indian and ten digits.',
+      );
+    }
     if (!employee) {
       throw new HttpException('employee not found', HttpStatus.NOT_FOUND);
     }
